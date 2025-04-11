@@ -1,0 +1,23 @@
+{
+    "name": "@cripty2001/whispr",
+    "version": "0.1",
+    "description": "A minimal, observable-based state engine with safe-by-default cloning, reactive computed values, and lifecycle-aware observables.",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "devDependencies": {
+        "@types/node": "^22.14.1",
+        "cross-env": "^7.0.3",
+        "npm-run-all": "^4.1.5",
+        "typescript": "^5.4.5",
+        "vitest": "^3.2.3"
+    },
+    "scripts": {
+        "test": "cross-env NODE_OPTIONS=--expose-gc vitest run --environment node --testTimeout 20000",
+        "build": "tsc"
+    },
+    "author": "Fabio Mauri <cripty2001@outlook.com>",
+    "license": "MIT"
+}
