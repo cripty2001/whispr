@@ -1,6 +1,6 @@
 {
     "name": "@cripty2001/whispr",
-    "version": "0.1",
+    "version": "0.1.0",
     "description": "A minimal, observable-based state engine with safe-by-default cloning, reactive computed values, and lifecycle-aware observables.",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
