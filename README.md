@@ -371,43 +371,6 @@ Whether you're implementing a data loader, a streaming API handler, or a debounc
 
 And since it’s all powered by Whispr, your async flows **remain fully observable, reactive, and memory-aware**.
 
-## 🧱 `WhisprMap` – Reactive collections made easy
-
-Sometimes you need an **observable collection of observables**: for example, a map of users where each user has its own state. While you could manually manage maps of `Whispr` instances, this gets messy fast when trying to derive reactive values from them.
-
-Enter `WhisprMap`, a specialized collection types that:
-
-- Expose a `data` observable that automatically derives the **unwrapped values** of the individual `Whispr`s.
-- Allow you to manipulate the collection via a `mutations` interface, as `Whispr` does.
-- Work seamlessly with `Whispr.from()` and other reactive utilities: no need to manually subscribe or sync nested observables.
-
-```ts
-const [userMap, mutations] = WhisprMap.create<number, string>();
-
-// Create some observables
-const [user1, update1] = Whispr.create("Alice");
-const [user2, update2] = Whispr.create("Bob");
-
-// Add them to the map
-mutations.set(1, user1);
-mutations.set(2, user2);
-
-// userMap.value === { 1: "Alice", 2: "Bob" }
-```
-
-> 🧠 `userMap` is a `Whispr<Record<number, string>>`, giving you the current values directly, with no manual unwraps.
-
-Available mutations:
-
-```ts
-interface WhisprMapMutations<K, V> {
-  set(key: K, value: Whispr<V>, force?: boolean): void;
-  delete(key: K): void;
-}
-```
-
-These utilities make it trivial to build rich UIs and stateful logic involving dynamic collections **while still maintaining full reactivity** and **clean composition** with `Whispr.from()` and derived observables.
-
 ## 🎓 Pro Tips
 
 ### Wait
@@ -540,11 +503,6 @@ const f = Whispr.from<
   I // Type of the input, as a map,
   O // Type of the output
 >()
-
-const m = WhisprMap.create<
-  K // Type of the key
-  V // Type of the value
->()
 ```
 
 ## 🧠 API Reference
@@ -590,34 +548,6 @@ Waits until the observable emits a defined, non-null value. Equivalent to `wait(
 ## 🧩 `Whispr.from(...)`
 
 Creates a computed observable from multiple source observables.
-
----
-
-## 🗺 `WhisprMap<K, V>`
-
-An observable map of observable values. It flattens and exposes the internal values, while still keeping for-key reactivity.
-
-### `WhisprMap.create<K, V>(): { data: WhisprMap<K, V>, mutations: WhisprMapMutations<K, V> }`
-
-```ts
-const { data: user1 } = Whispr.create("Alice");
-const { data: user2 } = Whispr.create("Bob");
-
-const { data: userMap, mutations } = WhisprMap.create<string, string>();
-await mutations.set("a", user1);
-await mutations.set("b", user2);
-```
-
-### Map API
-
-- `value: Map<K, V>` — A live view of all the observable entries.
-- `subscribe(cb, immediate?)` — Called when the map structure or any observable changes.
-- `wait(cb)` / `load()` — As in `Whispr`.
-
-### `WhisprMapMutations<K, V>`
-
-- `set(key: K, value: Whispr<V>, force?: boolean): void` — Adds or replaces an entry.
-- `delete(key: K): void` — Removes a key. No-op if the key doesn't exist.
 
 ## 🔧 License
 
