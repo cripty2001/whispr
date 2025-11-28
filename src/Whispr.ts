@@ -180,7 +180,6 @@ export class Whispr<T extends any> implements Whispr_I<T> {
     ): Promise<R> {
         return new Promise<R>((resolve) => {
             this.subscribe((data) => {
-                if (!data) return;
                 const result: R | null | undefined = cb(data);
                 if (result === null || result === undefined) return;
 
