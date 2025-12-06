@@ -1,6 +1,14 @@
 import { Observable } from "./Observable";
 import { Whispr_I, WhisprListener } from "./Whispr_I";
 
+const FinalizationRegistryPolyfill = typeof FinalizationRegistry !== 'undefined'
+    ? FinalizationRegistry
+    : class {
+        register(_target: any, _heldValue: any): void {
+            // No-op: FinalizationRegistry is not available in this environment
+        }
+    };
+
 export type WhisprSetter<T> = (data: T) => boolean
 
 /**
@@ -18,7 +26,7 @@ export class Whispr<T extends any> implements Whispr_I<T> {
      * Finalization registry to handle cleanup of dead observables.
      * It will help call the onDie even if there is nothing trying to deref the value itself. (a failed deref will always trigger onDie regardless of the behaviour of this registry)
      */
-    private static finalizationRegistry = new FinalizationRegistry((onDie: () => void) => {
+    private static finalizationRegistry = new FinalizationRegistryPolyfill((onDie: () => void) => {
         onDie();
     });
 
