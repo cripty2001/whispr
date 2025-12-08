@@ -7,7 +7,7 @@ import { ObservableListener } from "./Observable";
  * Returning "STOP" (or a Promise resolving to "STOP") unsubscribes the listener.
  * If safe cloning is enabled, the data is deeply cloned before being passed to the callback.
  */
-export type WhisprListener<T> = ObservableListener<T>
+export type WhisprListener<T> = ObservableListener<T>["cb"]
 
 export interface Whispr_I<T> {
     /**
@@ -29,9 +29,10 @@ export interface Whispr_I<T> {
      * @param cb Callback invoked when the observable is updated.
      *           Return "STOP" to unsubscribe automatically.
      * @param immediate If true, the callback is called immediately with the current value. If false, it will only be called on future updates.
+     * @param unsafe If true, the listener will be allowed to throw an error. Default is false.
      * @returns An unsubscribe function.
      */
-    subscribe(cb: WhisprListener<T>, immediate: boolean): () => void;
+    subscribe(cb: WhisprListener<T>, immediate: boolean, unsafe?: boolean): () => void;
 
     /**
      * Waits for the observable to emit a value matching a specific condition.

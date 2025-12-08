@@ -4,7 +4,12 @@ import { safeClone } from "./utils";
  * It receives the current value of the observable and can return a string, void, or a Promise of either.
  * If it returns "STOP", the listener will be unsubscribed.
  */
-export type ObservableListener<T> = (data: T) => string | void | Promise<string | void>;
+export type ObservableListener<T> = {
+    /** The callback function to be called when the observable is updated. It receives the current value of the observable. */
+    cb: (data: T) => string | void | Promise<string | void>;
+    /** If true, the listener will be allowed to throw an error*/
+    unsafe: boolean;
+}
 
 /**
  * Internal class for handling the observable logic.
@@ -85,16 +90,22 @@ export class Observable<T> {
         // Listeners may be async, but we want to keep the sync semantics of the observable.
         // Notifications are conceptually asyncronous, by the way. They run on the fire-and-forget principle.
         (async () => {
+            const { cb, unsafe } = listener;
             try {
-                const _result = listener(this._data)
+                const _result = cb(this._data)
                 const result = _result instanceof Promise ? await _result : _result;
                 if (result === "STOP") {
                     this.unsubscribe(listener);
                 }
             }
             catch (e) {
-                // Logging error and continuing to avoid amplifying the error
-                console.warn("Whispr listener threw an error:", e);
+                // Logging error 
+                console.warn("Whispr/Observable listener threw an error:", e);
+
+                // If the listener is unsafe, we rethrow the error
+                if (unsafe) {
+                    throw e;
+                }
             }
         })();
     }

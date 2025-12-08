@@ -176,8 +176,11 @@ export class Whispr<T extends any> implements Whispr_I<T> {
     /**
      * @see {@link Whispr_I.subscribe}
      */
-    public subscribe(cb: WhisprListener<T>, immediate: boolean = true): () => void {
-        return this.data.subscribe(cb, immediate);
+    public subscribe(cb: WhisprListener<T>, immediate: boolean = true, unsafe: boolean = false): () => void {
+        return this.data.subscribe({
+            cb,
+            unsafe,
+        }, immediate);
     }
 
     /**
