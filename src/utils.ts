@@ -53,9 +53,20 @@ export function safeClone(value: any): any {
     if (typeof value === 'function')
         return value;
 
-    // Detecting clone method
-    if (typeof value.clone === 'function')
-        return value.clone();
+    // Detecting clone method, and checking if it is properly implemented
+    const cloned = (() => {
+        if (typeof value.clone !== 'function')
+            return undefined;
+
+        try {
+            return value.clone();
+        } catch (error) {
+            console.warn('Error cloning object', error);
+            return undefined;
+        }
+    })();
+    if (cloned !== undefined)
+        return cloned;
 
     // Detecting class instance
     if (isLikelyClassInstance(value)) {
@@ -71,7 +82,6 @@ export function safeClone(value: any): any {
     // Returning as is
     return value;
 }
-
 
 function isLikelyClassInstance(obj: any): boolean {
     if (obj === null || typeof obj !== 'object') return false;
