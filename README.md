@@ -36,7 +36,7 @@ const [counter, setCounter] = Whispr.create(
   () => {
     // (optional) onDie callback
     console.log("Counter is dead 😢");
-  }
+  },
 );
 
 // Subscribe to changes
@@ -45,7 +45,7 @@ const unsubscribe = counter.subscribe((value) => {
 });
 
 // Update the Whispr value
-const ok = set(5);
+const ok = setCounter(5);
 if (!ok) {
   console.log("Counter is dead 😢");
 }
@@ -63,85 +63,7 @@ doubled.subscribe((val) => {
 });
 ```
 
-> ℹ️ Once an observable is "dead", it will not be revived. If `set()` returns `false` or `onDie()` is triggered, please clean up or stop updating. Whispr handles gracefully updates on dead items, but it is still a waste of resources.
-
-## 🔐 Safe Cloning (Safe by Default)
-
-By default, Whispr does its best to **protect your data from accidental mutations**, even when you're working with complex structures.
-
-When you access `.value` Whispr uses a custom `safeClone()` function to **deeply clone what it can**, while leaving uncloneable parts (like functions, DOM nodes, or Proxies) untouched. The same happens to `set()`, to ensure no live references are left exposed.
-
-This means:
-
-- You can safely mutate the data you receive.
-- Your changes **won’t** affect the original observable unless you explicitly `update()` it.
-- Even partial structures are protected — **only the truly uncloneable parts are shared**.
-
-```ts
-const [original] = Whispr.create({
-  a: "hi",
-  b: { c: () => console.log("hi") },
-});
-
-const v = original.value;
-
-v.a = "ehi";
-v.b.c = () => console.log(";)");
-v.b = { d: "ahahah" };
-
-console.log(original.value);
-// → { a: 'hi', b: { c: [Function: c] } }
-```
-
-The cloning isn’t all-or-nothing. It’s **recursive**, forgiving, and careful:
-
-- If a part of your data can’t be cloned, that part stays as-is.
-- Everything else is cloned as deeply as possible.
-
-### 🧠 What about class instances?
-
-JavaScript doesn’t have a reliable way to detect _all_ class instances — and cloning them blindly would break methods, prototypes, and internal state. To handle this safely, `safeClone()` uses multiple heuristics to detect likely class instances.
-
-If a class instance has a `.clone()` method, it is used to clone that object.<br>
-If no `.clone()` method is found:
-
-- The object is considered **uncloneable** and returned as-is.
-- A warning is emitted to help catch silent cloning issues.
-
-```ts
-class MyCustomType {
-  constructor(public val: number) {}
-  clone() {
-    return new MyCustomType(this.val);
-  }
-}
-```
-
-You can silence this warning by setting the flag `skipSafeClone = true` on the class.
-This is useful for classes like `Whispr` where cloning isn’t meaningful
-
-```ts
-class Whispr {
-  public skipSafeClone = true;
-}
-```
-
-> If you’re using custom classes and want to ensure they’re cloned properly, just add a `.clone()` method.
-
-### 📣 A note about edge cases
-
-Some class instances may slip through detection and get treated as plain objects. If that happens to you:
-
-- You can add a `.clone()` method to your class to fix it.
-- Or open an issue or discussion — we’re open to improving detection heuristics.
-
-### 🧰 Using `safeClone()` yourself
-
-You can use this logic in your own code too — `safeClone()` is exported for convenience:
-
-```ts
-import { safeClone } from "@cripty2001/whispr";
-```
+> ℹ️ Once an observable is "dead", it will not be revived. If `setCounter()` returns `false` or `onDie()` is triggered, please clean up or stop updating. Whispr handles gracefully updates on dead items, but it is still a waste of resources.
 
 ## 🧼 Automatic Cleanup (Reactive Magic)
 
@@ -342,7 +264,7 @@ Whispr intentionally **does not offer an async update method**.
 
 Instead, it gives you:
 
-- A safe, read-only `.value` accessor (data is **always cloned** before access)
+- A safe, read-only `.value` accessor (please note that the value is NOT cloned, so it is NOT safe to directly mutate it. Manually clone it if required)
 - A pure, synchronous `update(cb)` setter
 
 This mirrors the simplicity and reliability of React’s `useState`, ensuring you always work with predictable, up-to-date values, and never mutate data by mistake.
@@ -423,7 +345,7 @@ const merged = Whispr.from(
       id: item,
       profile: profiles[id],
     }));
-  }
+  },
 );
 ```
 
@@ -507,19 +429,11 @@ const f = Whispr.from<
 
 ## 🧠 API Reference
 
-### `safeClone(value: any): any`
-
-Deeply clones a value using a safe, recursive strategy.
-
-Used internally by `Whispr` to ensure immutability and protect against side effects. See the Safe Clone section for details.
-
----
-
-## 🔄 `Whispr<T>`
+### 🔄 `Whispr<T>`
 
 A reactive observable container with safe updates, subscriptions, and lifecycle management.
 
-### `Whispr.create<T>(initial: T, onDie?: () => void): [Whispr<T>,  WhisprMutations<T> ]`
+#### `Whispr.create<T>(initial: T, onDie?: () => void): [Whispr<T>,  WhisprMutations<T> ]`
 
 Creates a new observable instance. When the observable is no longer referenced, `onDie` will be called.
 
@@ -527,15 +441,13 @@ Creates a new observable instance. When the observable is no longer referenced, 
 const [user, setUser] = Whispr.create({ name: "Alice" });
 ```
 
-### Instance Properties & Methods
-
 #### `value: T`
 
-Returns the current observable value. If cloning is enabled, the result is deeply cloned.
+Returns the current observable value. The value is NOT cloned, so it is NOT safe to directly mutate it.
 
 #### `subscribe(cb: (data: T) => void | "STOP", immediate?: boolean): () => void`
 
-Subscribes to the observable. The callback is called on every change. Return `"STOP"` to unsubscribe automatically.
+Subscribes to the observable. The callback is called on every change. Return `"STOP"` to unsubscribe automatically. Please note that data is NOT cloned, so it is NOT safe to directly mutate it.
 
 #### `wait(cb: (data: T) => R | null | undefined): Promise<R>`
 
@@ -545,7 +457,7 @@ Waits for the first non-null result from `cb(data)`. Automatically unsubscribes 
 
 Waits until the observable emits a defined, non-null value. Equivalent to `wait(data => data)`.
 
-## 🧩 `Whispr.from(...)`
+#### 🧩 `Whispr.from(...)`
 
 Creates a computed observable from multiple source observables.
 

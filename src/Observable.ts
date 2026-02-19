@@ -1,4 +1,3 @@
-import { safeClone } from "./utils";
 /**
  * A listener function that can be subscribed to an observable.
  * It receives the current value of the observable and can return a string, void, or a Promise of either.
@@ -29,7 +28,7 @@ export class Observable<T> {
      * @param initialVdataalue The initial value of the observable.
      */
     public constructor(data: T) {
-        this._data = safeClone(data);
+        this._data = data;
     }
 
     /**
@@ -37,7 +36,7 @@ export class Observable<T> {
      * If allowed and supported, the value is returned as a deep clone.
      */
     public get value(): T {
-        return safeClone(this._data);
+        return this._data;
     }
 
     /**
@@ -47,7 +46,7 @@ export class Observable<T> {
      * @returns The result of the update operation, which is always true.
      */
     public set(data: T): true {
-        this._data = safeClone(data);
+        this._data = data;
 
         // We don't need to await the listeners
         this.listeners.forEach((listener) => {
